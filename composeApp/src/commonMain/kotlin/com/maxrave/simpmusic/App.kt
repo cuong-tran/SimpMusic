@@ -753,7 +753,7 @@ fun App(
                                 onClick = {
                                     shouldShowUpdateDialog = false
                                     viewModel.showedUpdateDialog = false
-                                    openUrl("https://simpmusic.org/download")
+                                    openUrl("https://github.com/cuong-tran/SimpMusic/releases")
                                 },
                             ) {
                                 Text(
