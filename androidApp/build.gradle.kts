@@ -174,8 +174,8 @@ dependencies {
 }
 
 sentry {
-    org.set("simpmusic")
-    projectName.set("android")
+    org.set("komikku")
+    projectName.set("musikku")
     ignoredFlavors.set(setOf("foss"))
     ignoredBuildTypes.set(setOf("debug"))
     autoInstallation.enabled = false
