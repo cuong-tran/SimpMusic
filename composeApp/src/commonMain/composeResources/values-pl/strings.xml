@@ -6,7 +6,7 @@
     <string name="subscribers">%1$s subskrybentów</string>
     <string name="year_and_category">%1$s • %2$s</string>
     <string name="album_length">%1$s utwory  %2$s</string>
-    <string name="view_count">%s wyświetleń</string>
+    <string name="view_count">%1$s wyświetleń</string>
     <string name="clear_search_history">Wyczyść historię wyszukiwania</string>
     <string name="liked">Polubienia</string>
     <string name="like">Polub</string>
@@ -73,6 +73,8 @@
     <string name="content_country">Kraj treści</string>
     <string name="change">Zmień</string>
     <string name="quality">Jakość</string>
+    <string name="prefer_320kbps_stream">Preferuj strumień 320kbps</string>
+    <string name="prefer_320kbps_stream_description">Automatycznie wyszukuj strumień audio 320kbps, jeśli jest dostępny online. Jeśli nie zostanie znaleziony, jakość powróci do wartości domyślnej.</string>
     <string name="download_quality">Jakość pobranych</string>
     <string name="video_download_quality">Jakość pobranego wideo</string>
     <string name="clear_downloaded_cache">Wyczyść pamięć podręczną pobranych</string>
@@ -121,6 +123,11 @@
     <string name="github">Github</string>
     <string name="maxrave_dev">maxrave-dev</string>
     <string name="buy_me_a_coffee">Kup mi kawę</string>
+    <string name="developer_blog">Blog dewelopera</string>
+    <string name="developer_blog_tagline">Czytaj notatki deweloperów &amp; poradniki i materiały zza kulis</string>
+    <string name="blog_promo_title">Nowości od dewelopera</string>
+    <string name="blog_promo_message">​Właśnie wystartowałem z moim osobistym blogiem pod adresem maxrave.dev – dzielę się tam historią powstania SimpMusic, technicznymi analizami ze świata music-tech oraz notatkami inżynieryjnymi. Zajrzyj, jeśli jesteś ciekawy ✨</string>
+    <string name="visit_blog">Odwiedź blog</string>
     <string name="paypal">PayPal</string>
     <string name="title">Tytuł</string>
     <string name="custom_order">Kolejność niestandardowa</string>
@@ -257,6 +264,7 @@
     <string name="translation_language_message">Wpisz kod języka (Eg: en) (2 litery). Jeśli chcesz ustawić ten sam język SimpMusic, proszę ustawić pole edycji puste.</string>
     <string name="invalid_language_code">Niepoprawny kod języka</string>
     <string name="lyrics_provider_youtube">Teksty piosenek dostarczone przez YouTube</string>
+    <string name="lyrics_provider_betterlyrics">Tekst dostarczony przez BetterLyrics</string>
     <string name="limit_player_cache">Limit pamięci podręcznej odtwarzacza</string>
     <string name="unlimited">Nieograniczone</string>
     <string name="third_party_libraries">Biblioteki zewnętrzne</string>
@@ -343,6 +351,14 @@
     <string name="repeat_off">Nie powtarzaj</string>
     <string name="youtube_transcript">Transkrypcja YouTube</string>
     <string name="user_interface">Interfejs</string>
+    <string name="theme_mode_system">Domyślny systemowy</string>
+    <string name="theme_mode_dark">Ciemny</string>
+    <string name="theme_mode_light">Jasny</string>
+    <string name="theme_color">Kolor motywu</string>
+    <string name="theme_color_default">Domyślny</string>
+    <string name="theme_color_wallpaper">Tapeta</string>
+    <string name="theme_color_custom">Niestandardowy</string>
+    <string name="custom_color">Kolor niestandardowy</string>
     <string name="translucent_bottom_navigation_bar">Przezroczysty dolny pasek nawigacji</string>
     <string name="you_can_see_the_content_below_the_bottom_bar">Możesz zobaczyć zawartość pod dolnym paskiem</string>
     <string name="donation">Jeśli lubisz moją pracę, kup mi kawę</string>
@@ -377,6 +393,9 @@
     <string name="invalid_port">Nieprawidłowy port</string>
     <string name="proxy_host_message">Wprowadź swój host proxy</string>
     <string name="proxy_port_message">Wprowadź swój port proxy</string>
+    <string name="proxy_username">Nazwa użytkownika proxy</string>
+    <string name="proxy_password">Hasło proxy</string>
+    <string name="proxy_username_message">Wprowadź nazwę użytkownika proxy (opcjonalne)</string>
     <string name="five_seconds">Pięć sekund</string>
     <string name="lyrics_provider_lrc">Tekst dostarczony przez LRCLIB</string>
     <string name="sync_first">Najpierw synchronizuj tę playlistę z YouTube Music</string>
@@ -384,13 +403,10 @@
     <string name="do_not_show_again">Nie pokazuj ponownie</string>
     <string name="auto_check_for_update">Automatyczne sprawdzanie aktualizacji</string>
     <string name="auto_check_for_update_description">Sprawdzanie aktualizacji po otwarciu aplikacji</string>
-    <string name="blur_fullscreen_lyrics">Efekt rozmycia tekstu piosenki na pełnym ekranie</string>
-    <string name="blur_fullscreen_lyrics_description">Rozmycie tła efektu pełnoekranowego ekranu tekstu</string>
     <string name="playback_speed_pitch"><![CDATA[Prędkość odtwarzania i tonacja]]></string>
+    <string name="playback_speed_pitch_disabled"><![CDATA[Prędkość i tonacja odtwarzania (wyłączone, gdy płynne przejście jest włączone)]]></string>
     <string name="playback_speed">Szybkość odtwarzania</string>
     <string name="pitch">Tonacja</string>
-    <string name="blur_player_background">Rozmyj tło odtwarzacza</string>
-    <string name="blur_player_background_description">Rozmycie tła efektu pełnoekranowego ekranu obecnie odtwarzanego utworu</string>
     <string name="merging_audio_and_video">Scalanie audio i wideo</string>
     <string name="error_occurred">Wystąpił błąd</string>
     <string name="downloading_audio">Pobieranie audio: %1$s </string>
@@ -478,6 +494,7 @@
     <string name="explicit_content_blocked">Wulgarna treść będzie pomijana</string>
     <string name="mix_for_you">Miks dla Ciebie</string>
     <string name="no_mixes_found">Nie znaleziono miksów</string>
+    <string name="no_charts_found">Nie znaleziono list przebojów</string>
     <string name="desktop_webview_description">Ze względu na ograniczenia Compose Multiplatform nie mogę zaimplementować WebView na komputerach.\nPrzeczytaj, aby dowiedzieć się, jak zalogować się na pulpicie:\n</string>
     <string name="open_blog_post">Otwórz post bloga</string>
     <string name="discord_integration">Integracja z Discord</string>
@@ -514,4 +531,8 @@
     <string name="downvote">Głos przeciw</string>
     <string name="vote_submitted">Dziękujemy za głosowanie nad tym tekstem!</string>
     <string name="vote_error">Przesyłanie nie powiodło się</string>
+    <string name="open_app">Otwórz SimpMusic</string>
+    <string name="close_miniplayer">Zamknij mini odtwarzacz</string>
+    <string name="open_miniplayer">Otwórz mini odtwarzacz</string>
+    <string name="quit_app">Zamknij aplikację</string>
 </resources>

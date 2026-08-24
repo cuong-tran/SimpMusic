@@ -1,3 +1,17 @@
+# ProGuard's return-type specialization narrows ActualParagraph()'s declared return type
+# from the Paragraph interface down to its only impl (SkiaParagraph). The bytecode still
+# pushes a Paragraph-typed value, so JVM 21's verifier rejects it at runtime with
+# "VerifyError: Bad return type" the moment any Text() renders (androidx.compose.ui.text).
+# code/allocation/variable + method/inlining: after inlining, ProGuard re-packs local
+# variable slots and emits a StackMapTable that disagrees with the actual frame on 2-slot
+# longs/doubles ("VerifyError: Inconsistent stackmap frames ... top not assignable to
+# long") the moment a large Composable class loads — hit at startup on the Windows
+# release build. Known upstream bug, still unfixed as of ProGuard 7.9.1:
+# https://github.com/Guardsquare/proguard/issues/443 (Compose Desktop, same frames)
+# https://github.com/Guardsquare/proguard/issues/302 (inlining-induced verify errors)
+# Shrinking, obfuscation, class-merging and every other optimization stay on.
+-optimizations !method/specialization/*,!code/allocation/variable,!method/inlining/*
+
 -keepclasseswithmembers class * {
     native <methods>;
 }
@@ -19,6 +33,22 @@
 -dontnote io.ktor.**
 -dontnote org.slf4j.**
 -dontnote kotlinx.serialization.**
+
+# Skiko / Skia + Compose AWT interop. ProGuard obfuscation renames these classes, which
+# breaks compose.interop.blending on the transparent desktop window — Canvas/video then
+# render see-through (you can see the desktop behind them). Keep them un-obfuscated.
+-keep class org.jetbrains.skiko.** { *; }
+-keep class org.jetbrains.skia.** { *; }
+-keep class androidx.compose.ui.awt.** { *; }
+-keep class androidx.compose.ui.interop.** { *; }
+-dontwarn org.jetbrains.skiko.**
+-dontwarn org.jetbrains.skia.**
+
+# compottie (Lottie renderer) draws via skiko (PlatformShader.skiko, SkikoPathBuilder).
+# On release, proguard obfuscation mangles its internal classes so the renderer runs but
+# paints nothing — the animation stays blank with no crash. Keep them un-obfuscated.
+-keep class io.github.alexzhirkevich.compottie.** { *; }
+-dontwarn io.github.alexzhirkevich.compottie.**
 
 # Okhttp3
 -keep class okhttp3.** { *; }
@@ -49,6 +79,7 @@
 -keep class com.maxrave.domain.data.model.** { *; }
 -keep class com.mohamedrejeb.ksoup.html.** { *; }
 -keep class org.schabi.newpipe.extractor.downloader.** { *; }
+-keep class dev.maxrave.pipepipe.extractor.downloader.** { *; }
 
 # Koin
 -keep class org.koin.core.** { *; }
@@ -57,6 +88,31 @@
 # Default rules
 -keep class kotlinx.coroutines.CoroutineExceptionHandler
 -keep class kotlinx.coroutines.internal.MainDispatcherFactory
+
+# kotlinx.coroutines full keep — R8 `optimize` flattens the Job hierarchy
+# and emits illegal `invokespecial` for `Job.cancel()` reached via
+# Supervisor → JobSupport → ChildJob → Job (indirect superinterface).
+# JVM 21 strict verifier rejects this with VerifyError. Keep the whole
+# package plus its volatile fields (compiler-generated state machines).
+-keep class kotlinx.coroutines.** { *; }
+-keepclassmembernames class kotlinx.coroutines.** {
+    volatile <fields>;
+}
+-keepclassmembers class kotlinx.coroutines.flow.internal.ChannelFlow* { <fields>; }
+-dontwarn kotlinx.coroutines.**
+
+# androidx.room — Room generates classes that delegate to coroutines.
+# Same R8 over-optimization risk hits Room's invalidation tracker (uses
+# CoroutineScope internally). Keep everything to be safe.
+-keep class androidx.room.** { *; }
+-keep interface androidx.room.** { *; }
+-keepclassmembers class androidx.room.** { *; }
+-dontwarn androidx.room.**
+
+# androidx.sqlite — Room depends on it; same precaution.
+-keep class androidx.sqlite.** { *; }
+-keep interface androidx.sqlite.** { *; }
+-dontwarn androidx.sqlite.**
 # Keep `Companion` object fields of serializable classes.
 # This avoids serializer lookup through `getDeclaredClasses` as done for named companion objects.
 -if @kotlinx.serialization.Serializable class **
@@ -109,6 +165,7 @@
 #}
 ## Rules for NewPipeExtractor
 -keep class org.schabi.newpipe.extractor.timeago.patterns.** { *; }
+-keep class dev.maxrave.pipepipe.extractor.timeago.patterns.** { *; }
 -keep class org.mozilla.javascript.** { *; }
 -dontwarn org.mozilla.javascript.tools.**
 # Please add these rules to your existing keep rules in order to suppress warning
@@ -224,6 +281,8 @@
 ## Rules for NewPipeExtractor
 -keep class org.schabi.newpipe.extractor.** { *; }
 -keep class org.schabi.newpipe.extractor.timeago.patterns.** { *; }
+-keep class dev.maxrave.pipepipe.extractor.** { *; }
+-keep class dev.maxrave.pipepipe.extractor.timeago.patterns.** { *; }
 -keep class org.mozilla.javascript.** { *; }
 -keep class org.mozilla.classfile.ClassFileWriter
 -dontwarn org.mozilla.javascript.tools.**
@@ -271,5 +330,54 @@
 -dontwarn android.os.Parcelable$Creator
 -dontwarn android.os.Parcel
 
+# Wire/nanojson descriptor classes referenced by Brave extractor's generated proto adapters and
+# YoutubeStreamExtractor helpers. Keep so proguard can resolve method signatures.
+-keep class com.squareup.wire.** { *; }
+-keep interface com.squareup.wire.** { *; }
+-dontwarn com.squareup.wire.**
+-keep class com.grack.nanojson.** { *; }
+-dontwarn com.grack.nanojson.**
+
+# org.json (JSON-Java): Android-provided, added as an explicit JVM-desktop dependency because
+# PipePipeExtractor references org.json.* (comment/stream extractors). Keep it.
+-keep class org.json.** { *; }
+
+# Brave bundles BitChute / json2java4nanojson model classes referenced by extractor constructors
+# kept via `-keep class org.schabi.newpipe.extractor.** { *; }`. Without explicit keeps, proguard
+# can't resolve the descriptor types and aborts with "unresolved reference" warnings.
+-keep class com.github.bravenewpipe.** { *; }
+-dontwarn com.github.bravenewpipe.**
+
+# PipePipe was compiled against Rhino 1.7.13 (which had org.mozilla.javascript.ObjToIntMap), but
+# Brave brings Rhino 1.8.1 where that class was removed. Gradle picks the higher version, leaving
+# PipePipe's TokenStream with a stale reference. The code path is unused for our YouTube usage,
+# so suppress the warning instead of pinning Rhino back.
+-dontwarn org.mozilla.javascript.ObjToIntMap
+
 -keep class * extends androidx.room.RoomDatabase { <init>(); }
 -keep class androidx.datastore.preferences.** { *; }
+
+# cache2k references kotlin.annotations.jvm.* (compile-only) at annotation level
+-dontwarn kotlin.annotations.jvm.**
+-dontwarn org.cache2k.**
+
+# Compose MP 1.11.0 graphics API breaking change — Skiko Shader/Paint method
+# signatures changed. Haze 1.7.2 and Compottie 2.1.0 still reference the old
+# signatures (no newer versions available yet). Suppress so ProGuard does not
+# abort. Runtime risk: NoSuchMethodError if affected code paths are hit.
+-dontwarn dev.chrisbanes.haze.**
+-keep class io.github.alexzhirkevich.compottie.**  { *; }
+# Compottie's skiko shader helper references org.jetbrains.skia.GradientStyle, removed in the current
+# Skiko. Class is gone (can't be kept/added), so suppress the unresolved-reference warning.
+-dontwarn io.github.alexzhirkevich.compottie.**
+
+# com.kyant.backdrop (liquid glass) was compiled against Skiko 0.144.x and references
+# RuntimeShaderBuilder.makeShader$default, whose signature changed in Skiko 0.148.2 (pulled by
+# compose-bom 2026.06 / coil3 3.5.0 / compottie 2.2.4). The method is gone, so ProGuard can't
+# resolve it and aborts. Liquid glass is not rendered on desktop, so the code path is never hit —
+# suppress the unresolved-reference warning. (Same approach as compottie/haze above.)
+-dontwarn com.kyant.backdrop.**
+
+# JNA references the signature-polymorphic java.lang.invoke.MethodHandle.invoke(...) overloads, which
+# ProGuard can't resolve as concrete methods. JNA itself is kept above; suppress these warnings.
+-dontwarn com.sun.jna.**

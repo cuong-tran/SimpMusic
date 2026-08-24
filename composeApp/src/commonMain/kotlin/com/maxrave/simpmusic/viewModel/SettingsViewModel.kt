@@ -11,6 +11,7 @@ import com.maxrave.common.SELECTED_LANGUAGE
 import com.maxrave.common.VIDEO_QUALITY
 import com.maxrave.domain.data.entities.DownloadState
 import com.maxrave.domain.data.entities.GoogleAccountEntity
+import com.maxrave.domain.data.player.GenericCastState
 import com.maxrave.domain.extension.toNetScapeString
 import com.maxrave.domain.manager.DataStoreManager
 import com.maxrave.domain.mediaservice.handler.DownloadHandler
@@ -39,16 +40,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
+import org.simpmusic.lastfm.isLastfmAvailable
 import simpmusic.composeapp.generated.resources.Res
 import simpmusic.composeapp.generated.resources.backup_create_failed
 import simpmusic.composeapp.generated.resources.backup_create_success
 import simpmusic.composeapp.generated.resources.backup_in_progress
+import simpmusic.composeapp.generated.resources.cancel
 import simpmusic.composeapp.generated.resources.clear_canvas_cache
 import simpmusic.composeapp.generated.resources.clear_downloaded_cache
 import simpmusic.composeapp.generated.resources.clear_player_cache
 import simpmusic.composeapp.generated.resources.clear_thumbnail_cache
+import simpmusic.composeapp.generated.resources.log_out_confirm_message
 import simpmusic.composeapp.generated.resources.restore_failed
 import simpmusic.composeapp.generated.resources.restore_in_progress
+import simpmusic.composeapp.generated.resources.warning
 
 class SettingsViewModel(
     private val dataStoreManager: DataStoreManager,
@@ -59,6 +64,8 @@ class SettingsViewModel(
 ) : BaseViewModel() {
     private val databasePath: String? = commonRepository.getDatabasePath()
     private val downloadUtils: DownloadHandler by inject()
+
+    val castState: StateFlow<GenericCastState> get() = mediaPlayerHandler.castState
 
     private var _location: MutableStateFlow<String?> = MutableStateFlow(null)
     val location: StateFlow<String?> = _location
@@ -118,10 +125,6 @@ class SettingsViewModel(
     val autoCheckUpdate: StateFlow<Boolean> = _autoCheckUpdate
     private var _updateChannel: MutableStateFlow<String> = MutableStateFlow(DataStoreManager.GITHUB)
     val updateChannel: StateFlow<String> = _updateChannel
-    private var _blurFullscreenLyrics = MutableStateFlow(false)
-    val blurFullscreenLyrics: StateFlow<Boolean> = _blurFullscreenLyrics
-    private var _blurPlayerBackground = MutableStateFlow(false)
-    val blurPlayerBackground: StateFlow<Boolean> = _blurPlayerBackground
     private val _aiProvider = MutableStateFlow<String>(DataStoreManager.AI_PROVIDER_OPENAI)
     val aiProvider: StateFlow<String> = _aiProvider
     private val _isHasApiKey = MutableStateFlow<Boolean>(false)
@@ -140,10 +143,6 @@ class SettingsViewModel(
     val crossfadeDuration: StateFlow<Int> = _crossfadeDuration
     private val _crossfadeDjMode = MutableStateFlow<Boolean>(true)
     val crossfadeDjMode: StateFlow<Boolean> = _crossfadeDjMode
-    private val _prefer320kbpsStream = MutableStateFlow<Boolean>(false)
-    val prefer320kbpsStream: StateFlow<Boolean> = _prefer320kbpsStream
-    private val _your320kbpsUrl: MutableStateFlow<String> = MutableStateFlow("")
-    val your320kbpsUrl: StateFlow<String> = _your320kbpsUrl
     private val _youtubeSubtitleLanguage = MutableStateFlow<String>("")
     val youtubeSubtitleLanguage: StateFlow<String> = _youtubeSubtitleLanguage
 
@@ -167,6 +166,22 @@ class SettingsViewModel(
     private val _richPresenceEnabled = MutableStateFlow(false)
     val richPresenceEnabled: StateFlow<Boolean> = _richPresenceEnabled
 
+    /**
+     * False in a FOSS build, and in a full build with no API key in `local.properties`. The whole
+     * Last.fm block in settings is hidden when it is false, rather than offering a login that
+     * could never succeed.
+     */
+    val lastfmAvailable: Boolean = isLastfmAvailable()
+
+    private val _lastfmUsername = MutableStateFlow("")
+    val lastfmUsername: StateFlow<String> = _lastfmUsername
+
+    private val _lastfmLoggedIn = MutableStateFlow(false)
+    val lastfmLoggedIn: StateFlow<Boolean> = _lastfmLoggedIn
+
+    private val _lastfmScrobbleEnabled = MutableStateFlow(false)
+    val lastfmScrobbleEnabled: StateFlow<Boolean> = _lastfmScrobbleEnabled
+
     private val _keepServiceAlive = MutableStateFlow<Boolean>(false)
     val keepServiceAlive: StateFlow<Boolean> = _keepServiceAlive
 
@@ -184,6 +199,9 @@ class SettingsViewModel(
 
     private val _localTrackingEnabled = MutableStateFlow<Boolean>(false)
     val localTrackingEnabled: StateFlow<Boolean> = _localTrackingEnabled
+
+    private val _blogNotificationEnabled = MutableStateFlow(true)
+    val blogNotificationEnabled: StateFlow<Boolean> = _blogNotificationEnabled
 
     // Auto Backup
     private val _autoBackupEnabled = MutableStateFlow<Boolean>(false)
@@ -258,8 +276,6 @@ class SettingsViewModel(
         getCanvasCache()
         getTranslucentBottomBar()
         getAutoCheckUpdate()
-        getBlurFullscreenLyrics()
-        getBlurPlayerBackground()
         getAIProvider()
         getAIApiKey()
         getAITranslation()
@@ -270,8 +286,6 @@ class SettingsViewModel(
         getCrossfadeEnabled()
         getCrossfadeDuration()
         getCrossfadeDjMode()
-        getPrefer320kbpsStream()
-        getYour320kbpsUrl()
         getContributorNameAndEmail()
         getBackupDownloaded()
         getUpdateChannel()
@@ -279,12 +293,15 @@ class SettingsViewModel(
         getExplicitContentEnabled()
         getDiscordLoggedIn()
         getDiscordRichPresenceEnabled()
+        getLastfmSession()
+        getLastfmScrobbleEnabled()
         getKeepServiceAlive()
         getKeepYouTubePlaylistOffline()
         getCombineLocalAndYouTubeLiked()
         getDownloadQuality()
         getVideoDownloadQuality()
         getLocalTrackingEnabled()
+        getBlogNotificationEnabled()
         getAutoBackupEnabled()
         getAutoBackupFrequency()
         getAutoBackupMaxFiles()
@@ -313,13 +330,28 @@ class SettingsViewModel(
         }
     }
 
+    private fun getBlogNotificationEnabled() {
+        viewModelScope.launch {
+            dataStoreManager.blogNotificationEnabled.collect { enabled ->
+                _blogNotificationEnabled.value = enabled == DataStoreManager.TRUE
+            }
+        }
+    }
+
+    fun setBlogNotificationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setBlogNotificationEnabled(enabled)
+            getBlogNotificationEnabled()
+        }
+    }
+
     private fun getDownloadQuality() {
         viewModelScope.launch {
             dataStoreManager.downloadQuality.collect { quality ->
-                when (quality) {
-                    QUALITY.items[0].toString() -> _downloadQuality.emit(QUALITY.items[0].toString())
-                    QUALITY.items[1].toString() -> _downloadQuality.emit(QUALITY.items[1].toString())
-                    else -> _downloadQuality.emit(QUALITY.items[0].toString())
+                if (QUALITY.items.any { it.toString() == quality }) {
+                    _downloadQuality.emit(quality)
+                } else {
+                    _downloadQuality.emit(QUALITY.items[0].toString())
                 }
             }
         }
@@ -443,40 +475,6 @@ class SettingsViewModel(
         }
     }
 
-    private fun getPrefer320kbpsStream() {
-        viewModelScope.launch {
-            dataStoreManager.prefer320kbpsStream.collect { enabled ->
-                _prefer320kbpsStream.value = enabled == DataStoreManager.TRUE
-            }
-        }
-    }
-
-    fun setPrefer320kbpsStream(enabled: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setPrefer320kbpsStream(enabled)
-            if (!enabled) {
-                dataStoreManager.setCrossfadeDjMode(false)
-                getCrossfadeDjMode()
-            }
-            getPrefer320kbpsStream()
-        }
-    }
-
-    private fun getYour320kbpsUrl() {
-        viewModelScope.launch {
-            dataStoreManager.your320kbpsUrl.collect { url ->
-                _your320kbpsUrl.value = url
-            }
-        }
-    }
-
-    fun setYour320kbpsUrl(url: String) {
-        viewModelScope.launch {
-            dataStoreManager.setYour320kbpsUrl(url.removeSuffix("/"))
-            getYour320kbpsUrl()
-        }
-    }
-
     private fun getDiscordLoggedIn() {
         viewModelScope.launch {
             dataStoreManager.discordToken.collect { loggedIn ->
@@ -485,9 +483,46 @@ class SettingsViewModel(
         }
     }
 
+    private fun getLastfmSession() {
+        viewModelScope.launch {
+            dataStoreManager.lastfmSessionKey.collect { key ->
+                _lastfmLoggedIn.value = key.isNotEmpty()
+            }
+        }
+        viewModelScope.launch {
+            dataStoreManager.lastfmUsername.collect { username ->
+                _lastfmUsername.value = username
+            }
+        }
+    }
+
+    fun logOutLastfm() {
+        viewModelScope.launch {
+            dataStoreManager.setLastfmSession(sessionKey = "", username = "")
+        }
+    }
+
+    private fun getLastfmScrobbleEnabled() {
+        viewModelScope.launch {
+            dataStoreManager.lastfmScrobbleEnabled.collect { enabled ->
+                _lastfmScrobbleEnabled.value = enabled == DataStoreManager.TRUE
+            }
+        }
+    }
+
+    fun setLastfmScrobbleEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setLastfmScrobbleEnabled(enabled)
+        }
+    }
+
     fun logOutDiscord() {
         viewModelScope.launch {
             dataStoreManager.setDiscordToken("")
+            // Turn Rich Presence off on logout: without a token it can't run, and leaving the flag on
+            // would both strand the user (the toggle greys out when logged out) and let the player keep
+            // a dead RPC alive (issue #2157). The existing richPresenceEnabled collector refreshes the UI.
+            dataStoreManager.setRichPresenceEnabled(false)
             delay(100)
             getDiscordLoggedIn()
         }
@@ -742,36 +777,6 @@ class SettingsViewModel(
         }
     }
 
-    private fun getBlurFullscreenLyrics() {
-        viewModelScope.launch {
-            dataStoreManager.blurFullscreenLyrics.collect { blurFullscreenLyrics ->
-                _blurFullscreenLyrics.value = blurFullscreenLyrics == DataStoreManager.TRUE
-            }
-        }
-    }
-
-    fun setBlurFullscreenLyrics(blurFullscreenLyrics: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setBlurFullscreenLyrics(blurFullscreenLyrics)
-            getBlurFullscreenLyrics()
-        }
-    }
-
-    private fun getBlurPlayerBackground() {
-        viewModelScope.launch {
-            dataStoreManager.blurPlayerBackground.collect { blurPlayerBackground ->
-                _blurPlayerBackground.value = blurPlayerBackground == DataStoreManager.TRUE
-            }
-        }
-    }
-
-    fun setBlurPlayerBackground(blurPlayerBackground: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setBlurPlayerBackground(blurPlayerBackground)
-            getBlurPlayerBackground()
-        }
-    }
-
     private fun getAutoCheckUpdate() {
         viewModelScope.launch {
             dataStoreManager.autoCheckForUpdates.collect { autoCheckUpdate ->
@@ -799,6 +804,33 @@ class SettingsViewModel(
 
     fun setBasicAlertData(alertData: SettingBasicAlertState?) {
         _basicAlertData.value = alertData
+    }
+
+    /**
+     * Asks before signing out of a linked account.
+     *
+     * Every one of these rows sits inside a long settings list and does its work on a single tap,
+     * with no undo — and getting back in is not symmetric with getting out: Last.fm sends the user
+     * through a browser again, YouTube and Spotify through a full web login. The confirmation is
+     * cheap next to that.
+     *
+     * @param confirmLabel names the service on the confirming button, because the dialog is the
+     * only thing on screen at that moment and "Log out" alone does not say out of what.
+     */
+    fun confirmLogOut(
+        confirmLabel: String,
+        onConfirm: () -> Unit,
+    ) {
+        viewModelScope.launch {
+            setBasicAlertData(
+                SettingBasicAlertState(
+                    title = getString(Res.string.warning),
+                    message = getString(Res.string.log_out_confirm_message),
+                    confirm = confirmLabel to onConfirm,
+                    dismiss = getString(Res.string.cancel),
+                ),
+            )
+        }
     }
 
     private fun getUsingProxy() {
@@ -1058,10 +1090,10 @@ class SettingsViewModel(
     fun getQuality() {
         viewModelScope.launch {
             dataStoreManager.quality.collect { quality ->
-                when (quality) {
-                    QUALITY.items[0].toString() -> _quality.emit(QUALITY.items[0].toString())
-                    QUALITY.items[1].toString() -> _quality.emit(QUALITY.items[1].toString())
-                    else -> _quality.emit(QUALITY.items[0].toString())
+                if (QUALITY.items.any { it.toString() == quality }) {
+                    _quality.emit(quality)
+                } else {
+                    _quality.emit(QUALITY.items[0].toString())
                 }
             }
         }
@@ -1511,6 +1543,15 @@ class SettingsViewModel(
             _spotifyLogIn.emit(loggedIn)
             if (!loggedIn) {
                 dataStoreManager.setSpdc("")
+                // Logging out of Spotify must also tear down everything gated behind it. Otherwise the
+                // lyrics/canvas flags stay stuck ON with no way to switch them off (the toggles grey out
+                // when logged out) and stale tokens linger — issue #2064, same family as Discord #2157.
+                dataStoreManager.setSpotifyLyrics(false)
+                dataStoreManager.setSpotifyCanvas(false)
+                dataStoreManager.setSpotifyClientToken("")
+                dataStoreManager.setSpotifyClientTokenExpires(0)
+                dataStoreManager.setSpotifyPersonalToken("")
+                dataStoreManager.setSpotifyPersonalTokenExpires(0)
                 delay(500)
             }
             getSpotifyLogIn()

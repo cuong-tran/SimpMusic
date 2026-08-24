@@ -17,7 +17,7 @@ android {
     val abis = arrayOf("armeabi-v7a", "arm64-v8a", "x86_64")
 
     namespace = "com.maxrave.simpmusic"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "app.musikku"
@@ -48,11 +48,12 @@ android {
                     "pt",
                     "fr",
                     "es",
-                    "zh",
+                    "zh-rCN",
+                    "id",
                     "in",
                     "ar",
                     "ja",
-                    "b+zh+Hant+TW",
+                    "zh-rTW",
                     "uk",
                     "iw",
                     "az",

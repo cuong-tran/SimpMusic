@@ -20,24 +20,25 @@ A FOSS YouTube Music client for Android and Desktop with many features from<br>S
   
 ## Features ✨️    
 - Play music from YouTube Music or YouTube for free, without ads and in the background
-- High quality up-to 320kbps stream (NEW)
+- High quality up-to 256kbps stream for YouTube Music Premium users (NEW)
 - Browsing Home, Charts, Podcast, Moods & Genre with YouTube Music data at high speed    
 - Search everything on YouTube    
 - Analyze your playing data, create custom playlists, and sync with YouTube Music...    
 - Spotify Canvas supported    
-- Powered your experience with SimpMusic Chart (https://chart.simpmusic.org/)
+- Power your experience with SimpMusic Chart (https://chart.simpmusic.org/)
 - Play 1080p video option with subtitle    
 - AI song suggestions    
 - Customize your playlist, synced with YouTube Music
 - Notifications from followed artists    
 - Caching and offline playback support    
 - Crossfade with DJ-style like Apple Music (NEW)
+- Customizing THEME (Light, Dark, Color, etc) (NEW)
 - Synced lyrics from SimpMusic Lyrics, LRCLIB, Spotify (require login) and YouTube Transcript - AI lyrics translation (BETA) (\*)  
 - Personalize data (\**) and multi-YouTube-account support    
 - Local "scrobble" like Last.fm (NEW)
 - Supports SponsorBlock and Return YouTube Dislike
 - Sleep Timer    
-- Android Auto with online content
+- Android Auto with online content, feature rich UI/UX (NEW)
 - Discord Rich Presence support
 - And many more!    
   
@@ -86,7 +87,7 @@ A FOSS YouTube Music client for Android and Desktop with many features from<br>S
  SimpMusic doesn't have any tracker or third-party server for collecting user data in FOSS version. If YouTube      
 logged-in users enable "Send back to Google" feature, SimpMusic only uses YouTube Music Tracking API to send listening history and listening record of video to Google for better recommendations and      
 supporting artist or YouTube Creator (For API reference,      
-see [this](https://github.com/maxrave-dev/SimpMusic/blob/13f7ab6e5fa521b62a9fd31a1cefdc2787a1a8af/kotlinYtmusicScraper/src/main/java/com/maxrave/kotlinytmusicscraper/Ytmusic.kt#L639C4-L666C1)).
+see [this](https://github.com/maxrave-dev/SimpMusic/blob/main/core/service/kotlinYtmusicScraper/src/commonMain/kotlin/com/maxrave/kotlinytmusicscraper/Ytmusic.kt)).
 
 We collect crash data in the Full version to improve the app.
    
@@ -97,7 +98,7 @@ I use [Sentry](http://sentry.io) crashlytics to catch all crashes in the Full ve
 ## Desktop app
 
 ### Which file should I download?
-- For Windows: Download the file with extension `.msi`.
+- For Windows: Download the `.msix` package and run `install.bat` to install.
 - For macOS: Download the file with extension `.dmg`.
 - For Linux: Download the file with extension `.AppImage` (all Linux distributions)
 
@@ -105,7 +106,8 @@ I use [Sentry](http://sentry.io) crashlytics to catch all crashes in the Full ve
 #### Discord login guide: https://gist.github.com/MarvNC/e601f3603df22f36ebd3102c501116c6
 
 ### Some limitations on Desktop app:
-- Very buggy on some Linux distributions (because of Jetbrains not fix).
+- Some Linux distributions may have stability issues (upstream JetBrains issue).
+- ARM64 on Windows and Linux: use the x64 build.
 
 Please report issues on our Discord server if you find any bugs.
  
@@ -116,9 +118,7 @@ You can help me translate this app into your language by using Crowdin [SimpMusi
  #### Special thanks to all translators on Crowdin ❤️    
  ## FAQ    
  #### 1. Wrong Lyrics?    
- Lyrics are provided by LRCLIB and other sources. Sometimes lyrics may not match perfectly with YouTube"      
-videoId" parameter. So I need to use some "String Matcher" and "Duration" for search lyrics. So      
-sometimes, some songs or videos get the wrong lyrics    
+ Lyrics are provided by LRCLIB and other sources. Sometimes lyrics may not match perfectly with the YouTube `videoId` parameter. So I need to use some "String Matcher" and "Duration" to search lyrics. So sometimes, some songs or videos get the wrong lyrics.    
     
 #### 2. Why the name or brand is "SimpMusic"?    
  Simply, because I love the name. It's a combination of 'Simple' and 'Music'. But SimpMusic is not a simple app, it's all you need for a powerful music streaming app.    
@@ -210,3 +210,5 @@ This project is tested with BrowserStack
 - Checkout BrowserStack now: https://www.browserstack.com/
 
 *This project is a part of SimpMusic.org Open-source project by me [maxrave-dev](https://github.com/maxrave-dev)*
+
+<!-- GitAds-Verify: 9788276LHF131ESPL12SWLJ8LACOJE89 -->

@@ -33,7 +33,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 21
-          distribution: "zulu"
+          distribution: "microsoft"
           cache: 'gradle'
 
       - name: Update build product flavor
@@ -48,6 +48,14 @@ jobs:
         run: |
           echo 'SENTRY_DSN=${{ secrets.SENTRY_DSN }}' > ./local.properties
           echo "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}" >> ./local.properties
+
+      - name: Update Last.fm secrets
+        env:
+          LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+          LASTFM_SECRET: ${{ secrets.LASTFM_SECRET }}
+        run: |
+          echo "LASTFM_API_KEY=${{ secrets.LASTFM_API_KEY }}" >> ./local.properties
+          echo "LASTFM_SECRET=${{ secrets.LASTFM_SECRET }}" >> ./local.properties
 
       - name: Generate aboutLibraries.json
         run: ./gradlew exportLibraryDefinitions
