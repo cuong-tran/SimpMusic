@@ -79,10 +79,10 @@ datetime = "0.8.0"
 sqlite = "2.7.0"
 okio = "3.18.1"
 atomicfu = "0.33.0"
-material3-multiplatform = "1.12.0-alpha01" # alpha01 = skiko 0.148.1 (has Matrix33.makeTranslate) to match compottie 1.12 snapshot; alpha02 bumps skiko 0.148.2 which removed it → compottie crash
+material3-multiplatform = "1.12.0-alpha02" # alpha02 = skiko 0.148.2, where Matrix33 became a value class over FloatArray. compottie 2.3.1 is compiled against THAT shape (makeTranslate-s3kpQbc:(FF)[F), so alpha01/skiko 0.148.1 would NoSuchMethodError on Desktop Lottie
 adaptive = "1.2.0"
 componentsResources = "1.11.1"
-compottie = "2.2.2-compose-1.12-SNAPSHOT" # Compose 1.12 / skiko 0.148.2 snapshot — material3 1.12-alpha forces skiko 0.148.2, stable compottie needs 0.144.6 and crashes
+compottie = "2.3.1" # first STABLE release built against Compose 1.12.0 — replaces the 2.2.x-compose-1.12 snapshots, which Sonatype purges (2.2.2 is gone, so the snapshot repo 404s and sync fails)
 cmptoast = "1.0.71"
 uri = "0.0.21"
 buildkonfig = "0.22.0"
