@@ -46,3 +46,6 @@ sentry.properties
 /desktopApp/generated.conveyor.conf
 # Conveyor output directory
 /output/
+
+# Scratch output of the icon pipeline (scripts/icons/README.md)
+scripts/icons/work/
