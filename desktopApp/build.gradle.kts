@@ -8,7 +8,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-// desktopApp — JVM application module for SimpMusic Desktop.
+// desktopApp — JVM application module for Musikku Desktop.
 //
 // Per JetBrains 2026 KMP guidance (AGP 9 + new default structure), the
 // platform-app entry points live in dedicated modules separate from the
@@ -117,7 +117,7 @@ dependencies {
     windowsAmd64(libs.compose.windows.x64)
 }
 
-// Append SimpMusic-specific keys to Conveyor's generated config file and
+// Append Musikku-specific keys to Conveyor's generated config file and
 // — crucially — replace the auto-detected `app.inputs` classpath with
 // ProGuard's shrunk jar directory so the packaged AppImage carries
 // obfuscated + size-reduced bytecode instead of raw Gradle output.
@@ -129,7 +129,7 @@ tasks.named<hydraulic.conveyor.gradle.WriteConveyorConfigTask>("writeConveyorCon
         destination.get().asFile.appendText(
             """
             |app.fsname = simpmusic
-            |app.display-name = SimpMusic
+            |app.display-name = Musikku
             |app.rdns-name = com.maxrave.simpmusic
             |
             |// Override the Gradle-detected classpath with the ProGuard'd
@@ -167,7 +167,7 @@ compose.desktop {
             }
             targetFormats(*listTarget.toTypedArray())
             modules("jdk.unsupported")
-            packageName = "SimpMusic"
+            packageName = "Musikku"
             macOS {
                 val formatedDate =
                     Instant.now().let {
@@ -332,7 +332,7 @@ tasks.register("packageConveyorAppImage") {
     )
 
     doLast {
-        val appName = "SimpMusic"
+        val appName = "Musikku"
         val conveyorOutput = rootDir.resolve("output")
         if (!conveyorOutput.exists()) {
             throw GradleException(
@@ -396,13 +396,13 @@ tasks.register("packageConveyorAppImage") {
             """[Desktop Entry]
             |Type=Application
             |Version=1.0
-            |Name=SimpMusic
-            |Comment=SimpMusic v$versionName - FOSS YouTube Music Client
+            |Name=Musikku
+            |Comment=Musikku v$versionName - FOSS YouTube Music Client
             |Exec=bin/simpmusic %u
             |Icon=simpmusic
             |Terminal=false
             |Categories=Audio;AudioVideo;
-            |StartupWMClass=SimpMusic
+            |StartupWMClass=Musikku
             |MimeType=x-scheme-handler/simpmusic;x-scheme-handler/wordbyword;
             |
             """.trimMargin(),
@@ -479,7 +479,7 @@ tasks.register("packageConveyorAppImage") {
 // Single command for users: `./gradlew :desktopApp:buildLinuxAppImage --no-configuration-cache`
 tasks.register("buildLinuxAppImage") {
     group = "distribution"
-    description = "Full SimpMusic Desktop Linux AppImage build pipeline (mpvSetupAll → conveyor → AppImage)."
+    description = "Full Musikku Desktop Linux AppImage build pipeline (mpvSetupAll → conveyor → AppImage)."
     dependsOn(conveyorMakeLinuxApp)
     finalizedBy("packageConveyorAppImage")
 }
@@ -523,13 +523,13 @@ val conveyorMakeMacZipAarch64 =
 
 tasks.register("buildMacZipAmd64") {
     group = "distribution"
-    description = "Full SimpMusic Desktop macOS Intel .zip pipeline (mpvSetupAll → conveyor)."
+    description = "Full Musikku Desktop macOS Intel .zip pipeline (mpvSetupAll → conveyor)."
     dependsOn(conveyorMakeMacZipAmd64)
 }
 
 tasks.register("buildMacZipAarch64") {
     group = "distribution"
-    description = "Full SimpMusic Desktop macOS Apple Silicon .zip pipeline (mpvSetupAll → conveyor)."
+    description = "Full Musikku Desktop macOS Apple Silicon .zip pipeline (mpvSetupAll → conveyor)."
     dependsOn(conveyorMakeMacZipAarch64)
 }
 
@@ -555,7 +555,7 @@ val conveyorMakeWindowsMsix =
 
 tasks.register("buildWindowsMsix") {
     group = "distribution"
-    description = "Full SimpMusic Desktop Windows .msix pipeline (mpvSetupAll → conveyor)."
+    description = "Full Musikku Desktop Windows .msix pipeline (mpvSetupAll → conveyor)."
     dependsOn(conveyorMakeWindowsMsix)
 }
 

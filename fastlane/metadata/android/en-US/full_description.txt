@@ -1,4 +1,4 @@
-Not a simple music player, it's SimpMusic
+Not just a music player, it's Musikku
 
 <br><b>Features:</b>
 
